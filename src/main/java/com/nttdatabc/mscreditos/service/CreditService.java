@@ -1,11 +1,13 @@
 package com.nttdatabc.mscreditos.service;
 
+import static com.nttdatabc.mscreditos.utils.Constantes.EX_ERROR_CONFLICTO_CUSTOMER_PERSONA;
 import static com.nttdatabc.mscreditos.utils.Constantes.EX_ERROR_REQUEST;
 import static com.nttdatabc.mscreditos.utils.Constantes.EX_ERROR_TYPE_ACCOUNT;
 import static com.nttdatabc.mscreditos.utils.Constantes.EX_ERROR_VALUE_MIN;
 import static com.nttdatabc.mscreditos.utils.Constantes.EX_NOT_FOUND_RECURSO;
 import static com.nttdatabc.mscreditos.utils.Constantes.EX_VALUE_EMPTY;
 import static com.nttdatabc.mscreditos.utils.Constantes.INTEREST_RATE;
+import static com.nttdatabc.mscreditos.utils.Constantes.MAX_SIZE_ACCOUNT_CUSTOMER_PERSONA;
 import static com.nttdatabc.mscreditos.utils.Constantes.VALUE_MIN_ACCOUNT_BANK;
 
 import java.math.BigDecimal;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 import com.nttdatabc.mscreditos.model.Credit;
 import com.nttdatabc.mscreditos.model.CustomerExt;
 import com.nttdatabc.mscreditos.model.TypeCredit;
+import com.nttdatabc.mscreditos.model.TypeCustomer;
 import com.nttdatabc.mscreditos.repository.CreditRepository;
 import com.nttdatabc.mscreditos.utils.Utilitarios;
 import com.nttdatabc.mscreditos.utils.exceptions.errors.ErrorResponseException;
@@ -50,6 +53,15 @@ public class CreditService {
         verifyTypeCredits(credit);
         verifyValues(credit);
         CustomerExt customerFound = verifyCustomerExists(credit.getCustomerId());
+        List<Credit>listCreditsByCustomer = getCreditsByCustomerId(credit.getCustomerId());
+
+        if(customerFound.getType().equalsIgnoreCase(TypeCustomer.PERSONA.toString())){
+            if(listCreditsByCustomer.size() >= MAX_SIZE_ACCOUNT_CUSTOMER_PERSONA){
+                throw new ErrorResponseException(EX_ERROR_CONFLICTO_CUSTOMER_PERSONA, HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT);
+            }
+        }
+
+
 
         credit.setId(Utilitarios.generateUUID());
         credit.setDateOpen(LocalDateTime.now().toString());

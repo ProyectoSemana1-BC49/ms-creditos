@@ -1,9 +1,13 @@
 package com.nttdatabc.mscreditos.service;
 
+import static com.nttdatabc.mscreditos.utils.Constantes.EX_ERROR_AMOUNT_CREDIT;
+import static com.nttdatabc.mscreditos.utils.Constantes.EX_ERROR_INSTALLMENTS;
+import static com.nttdatabc.mscreditos.utils.Constantes.EX_ERROR_PAYMENT_LIMIT;
 import static com.nttdatabc.mscreditos.utils.Constantes.EX_ERROR_REQUEST;
 import static com.nttdatabc.mscreditos.utils.Constantes.EX_ERROR_VALUE_MIN_MOVEMENT;
 import static com.nttdatabc.mscreditos.utils.Constantes.EX_NOT_FOUND_RECURSO;
 import static com.nttdatabc.mscreditos.utils.Constantes.EX_VALUE_EMPTY;
+import static com.nttdatabc.mscreditos.utils.Constantes.MAX_SIZE_INSTALLMENTS;
 import static com.nttdatabc.mscreditos.utils.Constantes.VALUE_MIN_ACCOUNT_BANK;
 
 import java.time.LocalDateTime;
@@ -41,12 +45,24 @@ public class MovementService {
         validateMovementEmpty(movementCredit);
         validateCreditRegister(movementCredit.getCreditId());
         verifyValues(movementCredit);
+
+        Credit infoCreditById = creditService.getCreditByIdService(movementCredit.getCreditId());
+        if(infoCreditById.getMountLimit().doubleValue() < movementCredit.getAmount().doubleValue()){
+            throw new ErrorResponseException(EX_ERROR_AMOUNT_CREDIT, HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT);
+        }
+        if(movementCredit.getTotalInstallments() > MAX_SIZE_INSTALLMENTS){
+            throw new ErrorResponseException(EX_ERROR_INSTALLMENTS, HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT);
+        }
         
         movementCredit.setId(Utilitarios.generateUUID());
         movementCredit.setDayCreated(LocalDateTime.now().toString());
         movementCredit.setStatus(StatusCredit.ACTIVO.toString());
         movementCredit.setPaidInstallments(new ArrayList<PaidInstallment>());
         movementRepository.save(movementCredit);
+
+        // actualizar crédito
+        infoCreditById.setMountLimit(infoCreditById.getMountLimit().subtract(movementCredit.getAmount()));
+        creditService.updateCreditService(infoCreditById);
     }
 
     public List<MovementCredit> getMovementsCreditsByCreditIdService(String creditId)throws ErrorResponseException{
@@ -65,12 +81,22 @@ public class MovementService {
             throw new ErrorResponseException(EX_ERROR_REQUEST, HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST);
     
         MovementCredit movementCredit = getMovementCreditByIdService(movementId);
+        if(movementCredit.getTotalInstallments().intValue() <= movementCredit.getPaidInstallments().size()){
+            throw new ErrorResponseException(EX_ERROR_PAYMENT_LIMIT, HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT);
+        }
+        
         validateCreditRegister(movementCredit.getCreditId());
         paidInstallment.setId(Utilitarios.generateUUID());
         paidInstallment.setDatePayment(LocalDateTime.now().toString());
         paidInstallment.setInstallmentNumber(movementCredit.getPaidInstallments().size() + 1);
         movementCredit.getPaidInstallments().add(paidInstallment);
+
         updateMovementCreditService(movementCredit);
+        MovementCredit movementCreditVerify = getMovementCreditByIdService(movementId);
+        if(movementCreditVerify.getTotalInstallments().intValue() == movementCredit.getPaidInstallments().size()){
+            movementCreditVerify.setStatus(StatusCredit.PAGADO.toString());
+            updateMovementCreditService(movementCreditVerify);
+        }
     }
     
     public void updateMovementCreditService(MovementCredit movementCredit)throws ErrorResponseException{
