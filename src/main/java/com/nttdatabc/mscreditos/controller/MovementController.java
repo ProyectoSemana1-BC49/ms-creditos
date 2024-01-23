@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.nttdatabc.mscreditos.api.MovementCreditsApi;
 import com.nttdatabc.mscreditos.model.MovementCredit;
 import com.nttdatabc.mscreditos.model.PaidInstallment;
-import com.nttdatabc.mscreditos.service.MovementService;
+import com.nttdatabc.mscreditos.service.MovementServiceImpl;
 import com.nttdatabc.mscreditos.utils.exceptions.errors.ErrorResponseException;
 
 import static com.nttdatabc.mscreditos.utils.Constantes.PREFIX_PATH;
@@ -23,12 +23,12 @@ import java.util.List;
 public class MovementController implements MovementCreditsApi {
 
     @Autowired
-    private MovementService movementService;
+    private MovementServiceImpl movementServiceImpl;
 
     @Override
     public ResponseEntity<Void> createMovementCredit(MovementCredit movementCredit) {
          try {
-            movementService.createMovementCreditService(movementCredit);
+            movementServiceImpl.createMovementCreditService(movementCredit);
         } catch (ErrorResponseException e) {
             throw new RuntimeException(e);
         }
@@ -39,7 +39,7 @@ public class MovementController implements MovementCreditsApi {
     public ResponseEntity<List<MovementCredit>> getMovementsCreditsByCreditId(String creditId) {
         List<MovementCredit> listFound = null;
         try {
-            listFound = movementService.getMovementsCreditsByCreditIdService(creditId);
+            listFound = movementServiceImpl.getMovementsCreditsByCreditIdService(creditId);
         } catch (ErrorResponseException e) {
             throw new RuntimeException(e);
         }
@@ -50,7 +50,7 @@ public class MovementController implements MovementCreditsApi {
     public ResponseEntity<MovementCredit> getMovementCreditById(String movementId) {
         MovementCredit movementById = null;
         try {
-            movementById = movementService.getMovementCreditByIdService(movementId);
+            movementById = movementServiceImpl.getMovementCreditByIdService(movementId);
         } catch (ErrorResponseException e) {
             throw new RuntimeException(e);
         }
@@ -60,7 +60,7 @@ public class MovementController implements MovementCreditsApi {
     @Override
     public ResponseEntity<Void> createPaymentInstallmentByMovementId(String movementId, PaidInstallment paidInstallment) {
         try {
-            movementService.createPaymentInstallmentByMovementId(movementId, paidInstallment);
+            movementServiceImpl.createPaymentInstallmentByMovementId(movementId, paidInstallment);
         } catch (ErrorResponseException e) {
             throw new RuntimeException(e);
         }
@@ -70,7 +70,7 @@ public class MovementController implements MovementCreditsApi {
     @Override
     public ResponseEntity<Void> updateMovementCredit(MovementCredit movementCredit) {
         try {
-            movementService.updateMovementCreditService(movementCredit);
+            movementServiceImpl.updateMovementCreditService(movementCredit);
         } catch (ErrorResponseException e) {
             throw new RuntimeException(e);
         }
@@ -80,7 +80,7 @@ public class MovementController implements MovementCreditsApi {
     @Override
     public ResponseEntity<Void> deleteMovementCredit(String movementId) {
         try {
-            movementService.deleteMovementCredit(movementId);
+            movementServiceImpl.deleteMovementCredit(movementId);
         } catch (ErrorResponseException e) {
             throw new RuntimeException(e);
         }

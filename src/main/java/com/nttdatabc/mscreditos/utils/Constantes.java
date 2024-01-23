@@ -27,4 +27,6 @@ public class Constantes {
     public static final String EX_ERROR_INSTALLMENTS = "Se puede solicitar un máximo de 10 cuotas";
     public static final Integer MAX_SIZE_INSTALLMENTS = 10;
     public static final String EX_ERROR_PAYMENT_LIMIT = "Ya canceló todas las cuotas.";
+
+    public static final String URL_CUSTOMER_ID = "http://localhost:8080/api/v1/customer/";
 }
